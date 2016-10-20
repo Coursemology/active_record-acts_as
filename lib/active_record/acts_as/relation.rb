@@ -9,7 +9,7 @@ module ActiveRecord
           options, scope = scope, nil if Hash === scope
           association_method = options.delete(:association_method)
           touch = options.delete(:touch)
-          options = {as: :actable, dependent: :destroy, validate: false, autosave: true}.merge options
+          options = {as: :actable, dependent: :destroy, validate: false}.merge options
 
           cattr_reader(:validates_actable) { options.delete(:validates_actable) == false ? false : true }
 
@@ -25,7 +25,6 @@ module ActiveRecord
             end
           }
           validate :actable_must_be_valid
-          after_update :touch_actable unless touch == false
 
           cattr_reader(:acting_as_reflection) { reflections.stringify_keys[name.to_s] }
           cattr_reader(:acting_as_name) { name.to_s }
@@ -35,8 +34,19 @@ module ActiveRecord
           alias_method :acting_as=, "#{name}=".to_sym
 
           include ActsAs::InstanceMethods
+          include ActsAs::Autosave
           singleton_class.module_eval do
             include ActsAs::ClassMethods
+          end
+
+          after_update do
+            non_cyclic_save(acting_as) do
+              if acting_as.changed?
+                acting_as.save
+              elsif touch != false
+                touch_actable
+              end
+            end
           end
         end
 
@@ -63,11 +73,20 @@ module ActiveRecord
         def actable(options = {})
           name = options.delete(:as) || :actable
 
-          reflections = belongs_to name, {polymorphic: true, dependent: :delete, autosave: true}.merge(options)
+          reflections = belongs_to name, {polymorphic: true, dependent: :delete}.merge(options)
 
           cattr_reader(:actable_reflection) { reflections.stringify_keys[name.to_s] }
 
           alias_method :specific, name
+
+          include ActsAs::Autosave
+          after_update do
+            non_cyclic_save(actable) do
+              if actable.changed?
+                actable.save
+              end
+            end
+          end
         end
 
         def actable?
