@@ -28,7 +28,7 @@ module ActiveRecord
           validate :actable_must_be_valid if validates_actable
 
           before_save do
-            @_acting_as_changed = ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.saved_changes? : acting_as.changed?
+            @_acting_as_changed = ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.has_changes_to_save? : acting_as.changed?
             true
           end
           after_commit do
@@ -54,7 +54,7 @@ module ActiveRecord
 
           after_update do
             non_cyclic_save(acting_as) do
-              if ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.saved_changes? : acting_as.changed?
+              if ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.has_changes_to_save? : acting_as.changed?
                 acting_as.save
               elsif touch != false
                 touch
@@ -108,7 +108,7 @@ module ActiveRecord
           include ActsAs::Autosave
           after_update do
             non_cyclic_save(actable) do
-              if ActiveRecord.version.to_s.to_f >= 5.1 ? actable.saved_changes? : actable.changed?
+              if ActiveRecord.version.to_s.to_f >= 5.1 ? actable.has_changes_to_save? : actable.changed?
                 actable.save
               end
             end
