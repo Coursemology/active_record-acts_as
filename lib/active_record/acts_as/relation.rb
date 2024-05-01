@@ -14,7 +14,7 @@ module ActiveRecord
 
           options = options.reverse_merge(as: as, validate: false, inverse_of: as)
 
-          reflections = has_one(name, scope, options)
+          reflections = has_one(name, scope, **options)
           default_scope -> {
             case association_method
               when :eager_load
@@ -86,7 +86,7 @@ module ActiveRecord
         def actable(options = {})
           name = options.delete(:as) || :actable
 
-          reflections = belongs_to(name, options.reverse_merge(validate: false, polymorphic: true, dependent: :destroy))
+          reflections = belongs_to(name, **options.reverse_merge(validate: false, polymorphic: true, dependent: :destroy))
 
           cattr_reader(:actable_reflection) { reflections.stringify_keys[name.to_s] }
 
