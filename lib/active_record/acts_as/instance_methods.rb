@@ -19,8 +19,10 @@ module ActiveRecord
 
       def actable_must_be_valid
         unless acting_as.valid?
-          acting_as.errors.each do |attribute, message|
-            errors.add(attribute, message) unless errors[attribute].include?(message)
+          acting_as.errors.messages.each do |attribute, messages|
+            messages.each do |message|
+              errors.add(attribute, message) unless errors[attribute].include?(message)
+            end
           end
         end
       end
@@ -39,6 +41,14 @@ module ActiveRecord
           super
         else
           acting_as.send(:write_attribute, attr_name, value, *args, &block)
+        end
+      end
+
+      def _write_attribute(attr_name, value, *args, &block)
+        if attribute_method?(attr_name.to_s)
+          super
+        else
+          acting_as.send(:_write_attribute, attr_name, value, *args, &block)
         end
       end
 
@@ -83,6 +93,9 @@ module ActiveRecord
         end
       end
 
+      # Rails 6 introduces the additional argument time, which allows the setup of time
+      # while touching the model (updating the updated_at or anything time-related). How-
+      # ever, since our Coursemology usage does not need this, we don't add the arg here.
       def touch(*args)
         self_args, acting_as_args = args.partition { |arg| has_attribute?(arg, true) }
         super(*self_args) if self_args.any?
