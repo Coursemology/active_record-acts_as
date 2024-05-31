@@ -12,9 +12,9 @@ module ActiveRecord
           as                 = options.delete(:as) || :actable
           validates_actable  = !options.key?(:validates_actable) || options.delete(:validates_actable)
 
-          options = options.reverse_merge(as: as, validate: false, inverse_of: as)
-
-          reflections = has_one(name, scope, **options)
+          reflections = has_one(name, scope, **options.reverse_merge(as: as,
+                                                                     validate: false,
+                                                                     inverse_of: as))
           default_scope -> {
             case association_method
               when :eager_load
@@ -28,7 +28,7 @@ module ActiveRecord
           validate :actable_must_be_valid if validates_actable
 
           before_save do
-            @_acting_as_changed = ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.has_changes_to_save? : acting_as.changed?
+            @_acting_as_changed = acting_as.has_changes_to_save?
             true
           end
           after_commit do
@@ -54,10 +54,10 @@ module ActiveRecord
 
           after_update do
             non_cyclic_save(acting_as) do
-              if ActiveRecord.version.to_s.to_f >= 5.1 ? acting_as.has_changes_to_save? : acting_as.changed?
+              if acting_as.has_changes_to_save?
                 acting_as.save
               elsif touch != false
-                touch
+                self.touch if saved_changes?
               end
             end
           end
@@ -83,10 +83,12 @@ module ActiveRecord
           super || acting_as?(klass)
         end
 
-        def actable(options = {})
+        def actable(scope = nil, **options)
           name = options.delete(:as) || :actable
 
-          reflections = belongs_to(name, **options.reverse_merge(validate: false, polymorphic: true, dependent: :destroy))
+          reflections = belongs_to(name, scope, **options.reverse_merge(validate: false, 
+                                                                        polymorphic: true, 
+                                                                        dependent: :destroy))
 
           cattr_reader(:actable_reflection) { reflections.stringify_keys[name.to_s] }
 
@@ -108,7 +110,7 @@ module ActiveRecord
           include ActsAs::Autosave
           after_update do
             non_cyclic_save(actable) do
-              if ActiveRecord.version.to_s.to_f >= 5.1 ? actable.has_changes_to_save? : actable.changed?
+              if actable.has_changes_to_save?
                 actable.save
               end
             end
