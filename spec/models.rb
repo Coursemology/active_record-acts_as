@@ -16,6 +16,10 @@ class Product < ActiveRecord::Base
     'class_method'
   end
 
+  callable_by_submodel def self.class_keyword_method_callable_by_submodel(one: 1, two: 2)
+    [one, two]
+  end
+
   callable_by_submodel def self.class_method_callable_by_submodel
     'class_method_callable_by_submodel'
   end
@@ -26,6 +30,10 @@ class Product < ActiveRecord::Base
 
   def raise_error
     specific.non_existant_method
+  end
+
+  def keyword_method(one: 1, two: 2)
+    [one, two]
   end
 end
 
@@ -48,6 +56,10 @@ class Pen < ActiveRecord::Base
 
   def pen_instance_method
   end
+end
+
+class Eraser < ActiveRecord::Base
+  acts_as :product
 end
 
 class Buyer < ActiveRecord::Base
@@ -91,6 +103,15 @@ end
 
 def initialize_schema
   initialize_database do
+    create_table :users do |t|
+      t.timestamps null: true
+      t.actable
+    end
+
+    create_table :customers do |t|
+      t.integer :identifier
+    end
+
     create_table :pen_collections do |t|
       t.timestamps null: true
     end
@@ -99,6 +120,11 @@ def initialize_schema
       t.string :color
       t.datetime :designed_at
       t.integer :pen_collection_id
+    end
+
+    create_table :erasers do |t|
+      t.integer :strength
+      t.datetime :designed_at
     end
 
     create_table :products do |t|
