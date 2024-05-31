@@ -26,15 +26,26 @@ module ActiveRecord
       end
     end
 
+    module ExistsConcern
+      extend ActiveSupport::Concern
+
+      included do
+        alias :_original_exists? :exists?
+
+        # We redefine the method only when this module is included
+        # to have acces to the original exists? method
+        def exists?(...)
+          return super unless acting_as?
+
+          joins(acting_as_name.to_sym)._original_exists?(...)
+        end
+      end
+
+    end
+
     module ScopeForCreate
       def scope_for_create(attributes = nil)
-        unless acting_as?
-          if Gem::Dependency.new('', '>= 5.2.1', '< 5.2.2').match?('', ActiveRecord.version)
-            return super(attributes)
-          else
-            return super()
-          end
-        end
+        return super() unless acting_as?
 
         scope = respond_to?(:values_for_create) ? values_for_create(attributes) : where_values_hash
         scope.merge!(where_values_hash(acting_as_model.table_name))
@@ -46,4 +57,8 @@ module ActiveRecord
 
   Relation.send(:prepend, ActsAs::QueryMethods)
   Relation.send(:prepend, ActsAs::ScopeForCreate)
+end
+
+ActiveSupport.on_load(:active_record) do
+  ActiveRecord::Relation.include(ActiveRecord::ActsAs::ExistsConcern)
 end
