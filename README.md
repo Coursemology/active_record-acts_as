@@ -4,6 +4,10 @@
 [![Coverage Status](https://coveralls.io/repos/krautcomputing/active_record-acts_as/badge.png)](https://coveralls.io/r/krautcomputing/active_record-acts_as)
 [![Dependency Status](https://gemnasium.com/krautcomputing/active_record-acts_as.svg)](https://gemnasium.com/krautcomputing/active_record-acts_as)
 
+# Change in the Upstream Repo
+
+This branch, initially forked from [the fork of `hzamani`](https://github.com/hzamani/active_record-acts_as), has now been changed into [the fork of `manuelmeurer`](https://github.com/chaadow/active_record-acts_as) since the former repo has mentioned that the currently active development is taking place in the latter one. The latest update for this repo (v4.0.0) follows the version 5.2.0 of `manuelmeurer`'s repo.
+
 # ActiveRecord::ActsAs
 
 This is a refactor of [`acts_as_relation`](https://github.com/hzamani/acts_as_relation)
@@ -21,9 +25,9 @@ a separate table for each product type, i.e. a `pens` table with `color` column.
 
 ## Requirements
 
-* Ruby >= 2.2
-* ActiveSupport >= 4.2
-* ActiveRecord >= 4.2
+- Ruby >= 3.0, <= 3.2
+- ActiveSupport >= 6.0, <= 7.1
+- ActiveRecord >= 6.0, <= 7.1
 
 ## Installation
 
@@ -189,12 +193,10 @@ end
 
 Multiple `acts_as` in the same class are not supported!
 
-
 ## Migrating from acts_as_relation
 
 Replace `acts_as_superclass` in models with `actable` and if you where using
 `:as_relation_superclass` option on `create_table` remove it and use `t.actable` on column definitions.
-
 
 ## RSpec custom matchers
 

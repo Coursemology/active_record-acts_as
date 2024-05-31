@@ -4,7 +4,7 @@ module ActiveRecord
       extend ActiveSupport::Concern
 
       module ClassMethods
-        def acts_as(name, scope = nil, options = {})
+        def acts_as(name, scope = nil, **options)
           options, scope = scope, nil if Hash === scope
 
           association_method = options.delete(:association_method)
@@ -84,6 +84,8 @@ module ActiveRecord
         end
 
         def actable(scope = nil, **options)
+          options, scope = scope, nil if Hash === scope
+
           name = options.delete(:as) || :actable
 
           reflections = belongs_to(name, scope, **options.reverse_merge(validate: false, 
