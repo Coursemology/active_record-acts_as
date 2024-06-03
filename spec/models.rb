@@ -58,6 +58,10 @@ class Pen < ActiveRecord::Base
   end
 end
 
+class Eraser < ActiveRecord::Base
+  acts_as :product
+end
+
 class Buyer < ActiveRecord::Base
   belongs_to :product
 end
@@ -116,6 +120,11 @@ def initialize_schema
       t.string :color
       t.datetime :designed_at
       t.integer :pen_collection_id
+    end
+
+    create_table :erasers do |t|
+      t.integer :strength
+      t.datetime :designed_at
     end
 
     create_table :products do |t|

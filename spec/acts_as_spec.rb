@@ -4,7 +4,9 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
   subject { Pen }
 
   let(:pen_attributes) { {name: 'pen', price: 0.8, color: 'red'} }
+  let(:eraser_attributes) { {name: 'eraser', price: 1.2, strength: 3} }
   let(:pen) { Pen.new pen_attributes }
+  let(:eraser) { Eraser.new eraser_attributes }
   let(:isolated_pen) { IsolatedPen.new color: 'red' }
   let(:store) { Store.new name: 'biggerman' }
   let(:product) { Product.new store: store }
@@ -399,12 +401,16 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
   end
 
   describe ".actables" do
-    before(:each) { clear_database }
+    before { clear_database }
 
     it "returns a query for the actable records" do
       red_pen   = Pen.create!(name: 'red pen',   price: 0.8, color: 'red')
       blue_pen  = Pen.create!(name: 'blue pen',  price: 0.8, color: 'blue')
       _black_pen = Pen.create!(name: 'black pen', price: 0.9, color: 'black')
+
+      20.times do
+        Eraser.create!(name: 'eraser', price: 1.2, strength: 3)
+      end
 
       actables = Pen.where(price: 0.8).actables
 
