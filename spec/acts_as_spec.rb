@@ -4,7 +4,9 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
   subject { Pen }
 
   let(:pen_attributes) { {name: 'pen', price: 0.8, color: 'red'} }
+  let(:eraser_attributes) { {name: 'eraser', price: 1.2, strength: 3} }
   let(:pen) { Pen.new pen_attributes }
+  let(:eraser) { Eraser.new eraser_attributes }
   let(:isolated_pen) { IsolatedPen.new color: 'red' }
   let(:store) { Store.new name: 'biggerman' }
   let(:product) { Product.new store: store }
@@ -157,6 +159,10 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       expect(pen.present).to eq("pen - $0.8")
     end
 
+    it "responds to supermodel methods with keyword arguments" do
+      expect(pen.keyword_method(one: 3, two: 4)).to eq [3,4]
+    end
+
     it 'responds to serialized attribute' do
       expect(pen).to respond_to('option1')
       expect(isolated_pen).to respond_to('option2')
@@ -295,26 +301,26 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
     end
 
     context "errors" do
+      let(:error_message) { "can't be blank" }
+
       context 'when validates_actable is set to true' do
         it "combines supermodel and submodel errors" do
           pen = Pen.new
           expect(pen).to be_invalid
-          expect(pen.errors.to_h).to eq(
-            name:  "can't be blank",
-            price: "can't be blank",
-            color: "can't be blank"
+          expect(pen.errors.to_hash).to eq(
+            name:  [error_message],
+            price: [error_message],
+            color: [error_message]
           )
           pen.name = 'testing'
           expect(pen).to be_invalid
-          expect(pen.errors.to_h).to eq(
-            price: "can't be blank",
-            color: "can't be blank"
+          expect(pen.errors.to_hash).to eq(
+            price: [error_message],
+            color: [error_message]
           )
           pen.color = 'red'
           expect(pen).to be_invalid
-          expect(pen.errors.to_h).to eq(
-            price: "can't be blank"
-          )
+          expect(pen.errors.to_hash).to eq( { price: [error_message] })
           pen.price = 0.8
           expect(pen).to be_valid
         end
@@ -324,9 +330,7 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
         it "unless validates_actable is set to false" do
           pen = IsolatedPen.new
           expect(pen).to be_invalid
-          expect(pen.errors.to_h).to eq(
-            color: "can't be blank"
-          )
+          expect(pen.errors.to_hash).to eq( { color: [error_message] })
           pen.color = 'red'
           expect(pen).to be_valid
         end
@@ -397,12 +401,16 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
   end
 
   describe ".actables" do
-    before(:each) { clear_database }
+    before { clear_database }
 
     it "returns a query for the actable records" do
       red_pen   = Pen.create!(name: 'red pen',   price: 0.8, color: 'red')
       blue_pen  = Pen.create!(name: 'blue pen',  price: 0.8, color: 'blue')
-      black_pen = Pen.create!(name: 'black pen', price: 0.9, color: 'black')
+      _black_pen = Pen.create!(name: 'black pen', price: 0.9, color: 'black')
+
+      20.times do
+        Eraser.create!(name: 'eraser', price: 1.2, strength: 3)
+      end
 
       actables = Pen.where(price: 0.8).actables
 
@@ -411,12 +419,34 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
     end
   end
 
+  describe '.actable' do
+    class User < ActiveRecord::Base
+      actable -> { unscope(:where) }
+    end
+
+    class Customer < ActiveRecord::Base
+      default_scope { where('identifier > 1') }
+      acts_as :user
+
+      validates_presence_of :identifier
+    end
+
+    context 'with scope' do
+      it 'unscopes default scope' do
+        customer = Customer.create!(identifier: 1)
+        user = customer.user.reload
+        expect(user).to be_a User
+        expect(user.actable).to eq(customer)
+      end
+    end
+  end
+
   context 'class methods' do
     before(:each) { clear_database }
 
     context 'when they are defined via `scope`' do
       it 'can be called from the submodel' do
-        cheap_pen     = Pen.create!(name: 'cheap pen',     price: 0.5, color: 'blue')
+        _cheap_pen    = Pen.create!(name: 'cheap pen',     price: 0.5, color: 'blue')
         expensive_pen = Pen.create!(name: 'expensive pen', price: 1,   color: 'red')
 
         expect(Product.with_price_higher_than(0.5).to_a).to eq([expensive_pen.acting_as])
@@ -428,6 +458,10 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       it 'can be called from the submodel' do
         expect(Product.class_method_callable_by_submodel).to eq('class_method_callable_by_submodel')
         expect(Pen.class_method_callable_by_submodel).to eq('class_method_callable_by_submodel')
+      end
+
+      it 'with keyword arguments can be called from the submodel' do
+        expect(Pen.class_keyword_method_callable_by_submodel(one: 3, two: 4)).to eq([3,4])
       end
     end
 
@@ -456,6 +490,13 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       @black_pen.buyers.create! name: 'John'
     end
 
+    describe 'exists?' do
+      it 'checks on both model and supermodel' do
+        expect(Pen.exists?(name: 'red pen')).to be_truthy
+        expect(Pen.exists?(name: 'red pen', price: 0.8)).to be_truthy
+      end
+    end
+
     describe '.where and .where!' do
       it 'respects supermodel attributes' do
         conditions = { price: 0.8 }
@@ -469,13 +510,13 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
 
       it 'works with hashes' do
         conditions = {
-          pen_caps: { size: 'M' },
-          buyers: { name: 'Tim' }
+          pen_caps: { size: "M" },
+          buyers: { name: "Tim" }
         }
 
-        expect(Pen.joins(:pen_caps, :buyers).where(conditions).to_a).to eq([@blue_pen])
+        expect(Pen.joins(:pen_caps, product: :buyers).where(conditions).to_a).to eq([@blue_pen])
 
-        relation = Pen.joins(:pen_caps, :buyers)
+        relation = Pen.joins(:pen_caps, product: :buyers)
         relation.where!(conditions)
         expect(relation.to_a).to eq([@blue_pen])
       end
@@ -540,7 +581,7 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       Object.send(:remove_const, :Pen)
     end
 
-    it "should not include the selected attribute when associating using 'eager_load'" do
+    it "should include the selected attribute when associating using 'eager_load'" do
       class Pen < ActiveRecord::Base
         acts_as :product , {association_method: :eager_load}
         store_accessor :settings, :option1
@@ -548,7 +589,7 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       end
       Pen.create pen_attributes
 
-      expect(Pen.select("'something' as thing").first['thing']).to be_nil
+      expect(Pen.select("'something' as thing").first['thing']).to eq 'something'
     end
 
     it "should include the selected attribute in the model when associating using 'includes'" do
