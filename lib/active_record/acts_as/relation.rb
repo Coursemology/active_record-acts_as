@@ -85,6 +85,8 @@ module ActiveRecord
 
         def actable(scope = nil, **options)
           name = options.delete(:as) || :actable
+          puts "Scope: #{scope.inspect}"
+          puts "Options: #{options.inspect}"
 
           reflections = belongs_to(name, scope, **options.reverse_merge(validate: false, 
                                                                         polymorphic: true, 
