@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "coveralls", require: false
-gem "rails", "6.0.6.1"
+gem "coveralls_reborn", require: false
+gem "rails", "~> 7.2"
 
 gemspec path: "../"

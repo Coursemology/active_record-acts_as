@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.0.1] - 2024-09-04
+
+### Added
+
+- Add support for rails 7.2
+- Add support for ruby 3.2 and 3.3
+
+### Removed
+
+- Remove support for rails 6.x
+
 ## [4.0.0] - 2024-06-03
 
 ### Added

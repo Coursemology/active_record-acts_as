@@ -6,7 +6,7 @@ require 'active_record/acts_as/version'
 Gem::Specification.new do |spec|
   spec.name          = "active_record-acts_as"
   spec.version       = ActiveRecord::ActsAs::VERSION
-  spec.authors       = ["Hassan Zamani", "Manuel Meurer"]
+  spec.authors       = ["Hassan Zamani", "Manuel Meurer", "Bivan Alzacky Harmanto", "Adi Suryanata Herwana"]
   spec.email         = ["hsn.zamani@gmail.com", "manuel@krautcomputing.com"]
   spec.summary       = %q{Simulate multi-table inheritance for activerecord models}
   spec.description   = %q{Simulate multi-table inheritance for activerecord models using a plymorphic association}
@@ -28,6 +28,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "appraisal", "~> 2.1"
   spec.add_development_dependency "guard-rspec", "~> 4.7"
 
-  spec.add_dependency "activesupport", ">= 6.0"
-  spec.add_dependency "activerecord", ">= 6.0"
+  spec.add_dependency "activesupport", ">= 7.0"
+  spec.add_dependency "activerecord", ">= 7.0"
 end
