@@ -49,11 +49,11 @@ RSpec.describe "ActiveRecord::Base subclass with #actable" do
 
   it "raises NoMethodError for undefined methods on specific" do
     pen.save
-    if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('3.3.0')
-      expect{ pen.product.raise_error }.to raise_error(NoMethodError, /undefined method `non_existant_method' for #<Pen/)                                     
-    else
-      expect{ pen.product.raise_error }.to raise_error(NoMethodError, /undefined method `non_existant_method' for an instance of Pen/)
-    end
+    # Ruby < 3.3.0: "undefined method `non_existant_method' for #<Pen:..."
+    # Ruby 3.3.0: "undefined method `non_existant_method' for an instance of Pen"
+    # Ruby 3.4.0+: "undefined method 'non_existant_method' for an instance of Pen"
+
+    expect { pen.product.raise_error }.to raise_error(NoMethodError, /undefined method.*non_existant_method.*for.*Pen/)
   end
 
   it "deletes specific subclass on destroy" do

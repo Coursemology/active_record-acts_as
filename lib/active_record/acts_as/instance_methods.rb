@@ -93,13 +93,14 @@ module ActiveRecord
         end
       end
 
-      # Rails 6 introduces the additional argument time, which allows the setup of time
-      # while touching the model (updating the updated_at or anything time-related). How-
-      # ever, since our Coursemology usage does not need this, we don't add the arg here.
-      def touch(*args)
+      # Rails 6+ adds a `time:` keyword to #touch. Rails' own deferred-touch flow
+      # (TouchLater#touch_deferred_attributes, run in before_committed!) calls `touch(time:)`, so the
+      # override MUST accept it — otherwise the kwarg hash is misread as a column name and raises
+      # ActiveModel::MissingAttributeError. Mirrors upstream (chaadow) v5.x.
+      def touch(*args, time: nil)
         self_args, acting_as_args = args.partition { |arg| has_attribute?(arg, true) }
-        super(*self_args) if self_args.any?
-        acting_as.touch(*acting_as_args) if acting_as.persisted?
+        super(*self_args, time: time) if self_args.any?
+        acting_as.touch(*acting_as_args, time: time) if acting_as.persisted?
       end
 
       def respond_to?(name, include_private = false, as_original_class = false)
