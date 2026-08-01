@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Hassan Zamani", "Manuel Meurer", "Bivan Alzacky Harmanto", "Adi Suryanata Herwana"]
   spec.email         = ["hsn.zamani@gmail.com", "manuel@krautcomputing.com"]
   spec.summary       = %q{Simulate multi-table inheritance for activerecord models}
-  spec.description   = %q{Simulate multi-table inheritance for activerecord models using a plymorphic association}
-  spec.homepage      = "http://github.com/krautcomputing/active_record-acts_as"
+  spec.description   = %q{Simulate multi-table inheritance for activerecord models using a polymorphic association}
+  spec.homepage      = "https://github.com/Coursemology/active_record-acts_as"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
@@ -18,16 +18,15 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 3.0"
+  spec.required_ruby_version = ">= 3.1"
 
-  spec.add_development_dependency "sqlite3", "~> 1.7"
+  spec.add_development_dependency "sqlite3", ">= 2.1"
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rspec", "~> 3"
-  spec.add_development_dependency "psych", "3.3.2"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "appraisal", "~> 2.1"
   spec.add_development_dependency "guard-rspec", "~> 4.7"
 
-  spec.add_dependency "activesupport", ">= 7.0"
-  spec.add_dependency "activerecord", ">= 7.0"
+  spec.add_dependency "activesupport", ">= 7.2"
+  spec.add_dependency "activerecord", ">= 7.2"
 end

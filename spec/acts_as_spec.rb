@@ -229,7 +229,7 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       describe '#touch with arguments' do
         it "forwards supermodel arguments tothe supermodel" do
           pen.save!
-          expect(pen.product).to receive(:touch).with(:updated_at)
+          expect(pen.product).to receive(:touch).with(:updated_at, time: nil)
           pen.touch(:updated_at, :designed_at)
         end
 
@@ -242,8 +242,20 @@ RSpec.describe "ActiveRecord::Base model with #acts_as called" do
       describe '#touch without arguments' do
         it "touches the supermodel" do
           pen.save!
-          expect(pen.product).to receive(:touch).with(no_args)
+          expect(pen.product).to receive(:touch).with(time: nil)
           pen.touch
+        end
+      end
+
+      # Regression: Rails 6+ passes a `time:` kwarg to #touch (e.g. the deferred-touch flow that
+      # belongs_to(touch: true) triggers in before_committed!). The override must accept it rather
+      # than mistaking the kwarg hash for a column name (ActiveModel::MissingAttributeError).
+      describe '#touch with a time: keyword' do
+        it "does not raise and forwards time: to the supermodel" do
+          pen.save!
+          now = Time.now
+          expect(pen.product).to receive(:touch).with(time: now)
+          expect { pen.touch(time: now) }.not_to raise_error
         end
       end
 
